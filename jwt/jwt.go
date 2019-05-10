@@ -68,6 +68,8 @@ type Config struct {
 	Audience string
 
 	UseIDToken bool
+
+	TargetAudience string
 }
 
 // TokenSource returns a JWT TokenSource using the configuration
@@ -114,6 +116,9 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 	}
 	if aud := js.conf.Audience; aud != "" {
 		claimSet.Aud = aud
+	}
+	if target := js.conf.TargetAudience; target != "" {
+		claimSet.PrivateClaims = map[string]interface{}{"target_audience": target}
 	}
 	h := *defaultHeader
 	h.KeyID = js.conf.PrivateKeyID

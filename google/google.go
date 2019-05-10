@@ -113,6 +113,37 @@ type credentialsFile struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+func IDConfigFromJSON(jsonKey []byte, audience string) (*jwt.Config, error) {
+	var f credentialsFile
+	if err := json.Unmarshal(jsonKey, &f); err != nil {
+		return nil, err
+	}
+	if f.Type != serviceAccountKey {
+		return nil, fmt.Errorf("google: read JWT from JSON credentials: 'type' field is %q (expected %q)", f.Type, serviceAccountKey)
+	}
+	cfg := f.idConfig(audience)
+	cfg.UseIDToken = true
+	cfg.Audience = "https://accounts.google.com/o/oauth2/token"
+	cfg.TokenURL = "https://www.googleapis.com/oauth2/v4/token"
+	cfg.Audience = "https://www.googleapis.com/oauth2/v4/token"
+	cfg.TargetAudience = audience
+	return cfg, nil
+}
+
+func (f *credentialsFile) idConfig(audience string) *jwt.Config {
+	cfg := &jwt.Config{
+		Email:          f.ClientEmail,
+		PrivateKey:     []byte(f.PrivateKey),
+		PrivateKeyID:   f.PrivateKeyID,
+		TokenURL:       f.TokenURL,
+		TargetAudience: audience,
+	}
+	if cfg.TokenURL == "" {
+		cfg.TokenURL = JWTTokenURL
+	}
+	return cfg
+}
+
 func (f *credentialsFile) jwtConfig(scopes []string) *jwt.Config {
 	cfg := &jwt.Config{
 		Email:        f.ClientEmail,
