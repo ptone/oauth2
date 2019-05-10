@@ -45,29 +45,6 @@ func JWTAccessTokenSourceFromJSON(jsonKey []byte, audience string) (oauth2.Token
 	return oauth2.ReuseTokenSource(tok, ts), nil
 }
 
-func IDTokenSourceFromJSON(jsonKey []byte, audience string) (oauth2.TokenSource, error) {
-	cfg, err := JWTConfigFromJSON(jsonKey)
-	cfg.UseIDToken = true
-	if err != nil {
-		return nil, fmt.Errorf("google: could not parse JSON key: %v", err)
-	}
-	pk, err := internal.ParseKey(cfg.PrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("google: could not parse key: %v", err)
-	}
-	ts := &jwtAccessTokenSource{
-		email:    cfg.Email,
-		audience: audience,
-		pk:       pk,
-		pkID:     cfg.PrivateKeyID,
-	}
-	tok, err := ts.Token()
-	if err != nil {
-		return nil, err
-	}
-	return oauth2.ReuseTokenSource(tok, ts), nil
-}
-
 type jwtAccessTokenSource struct {
 	email, audience string
 	pk              *rsa.PrivateKey
