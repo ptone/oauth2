@@ -66,6 +66,8 @@ type Config struct {
 	// request.  If empty, the value of TokenURL is used as the
 	// intended audience.
 	Audience string
+
+	UseIDToken bool
 }
 
 // TokenSource returns a JWT TokenSource using the configuration
@@ -159,6 +161,9 @@ func (js jwtSource) Token() (*oauth2.Token, error) {
 		token.Expiry = time.Now().Add(time.Duration(secs) * time.Second)
 	}
 	if v := tokenRes.IDToken; v != "" {
+		if js.conf.UseIDToken {
+			token.AccessToken = tokenRes.IDToken
+		}
 		// decode returned id token to get expiry
 		claimSet, err := jws.Decode(v)
 		if err != nil {
